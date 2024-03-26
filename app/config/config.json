@@ -1,0 +1,14 @@
+{
+  "web": {
+    "apiHost": "0.0.0.0:3000",
+    "debugHost": "0.0.0.0:4000",
+    "readTimeout": 5000000000,
+    "writeTimeout": 10000,
+    "idleTimeout": 120000,
+    "shutdownTimeout": 20000
+  },
+  "ai": {
+    "apiKey": "",
+    "apiUrl": "https://api.openai.com/v1/chat/completions"
+  }
+}

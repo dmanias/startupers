@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "creative-narration.fullname" . }}-test-connection"
+  labels:
+    {{- include "creative-narration.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "creative-narration.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
