@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+var ConfigPath = "./app/config/config.json"
+
 var build = "develop"
 
 type Server interface {
@@ -70,7 +72,7 @@ func handleAsk(apikey string, w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	cfg, err := config.LoadConfig("config/config.json")
+	cfg, err := config.LoadConfig(ConfigPath)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
 		os.Exit(1)
