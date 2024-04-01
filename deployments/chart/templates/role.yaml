@@ -1,0 +1,34 @@
+{{- if .Values.rbac.create }}
+kind: Role
+apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
+metadata:
+  name: {{ include "startupers.fullname" . }}
+  labels:
+    {{- include "startupers.selectorLabels" . | nindent 4 }}
+# yamllint disable rule:indentation
+rules:
+  {{- $pspAvailable := (semverCompare "<1.25-0" (include "common.capabilities.kubeVersion" .)) -}}
+  {{- if and $pspAvailable .Values.psp.create }}
+  - apiGroups:
+      - 'policy'
+    resources:
+      - 'podsecuritypolicies'
+    verbs:
+      - 'use'
+    resourceNames:
+      - {{ include "startupers.fullname" . }}
+  {{- end }}
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+    resourceNames:
+      - {{ include "startupers.fullname" . }}-registrykey
+      - {{ include "startupers.fullname" . }}-config
+  {{- if .Values.rbac.rules }}
+  {{- include "common.tplvalues.render" ( dict "value" .Values.rbac.rules "context" $ ) | nindent 2 }}
+  {{- end }}
+# yamllint enable rule:indentation
+{{- end }}

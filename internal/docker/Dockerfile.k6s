@@ -1,0 +1,7 @@
+# docker build -t k6s -f internal/docker/Dockerfile.k6s internal
+FROM grafana/k6@sha256:eee7e4143087489e2a067617c5dd69685c9ae7c9c22331acac8708d0710f5727
+
+WORKDIR /k6s
+COPY  k6s .
+
+CMD ["k6 run ./get-users.js"]

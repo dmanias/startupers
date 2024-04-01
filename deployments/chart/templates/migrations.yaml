@@ -1,0 +1,66 @@
+{{- if .Values.helpers.migrations.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "startupers.fullname" . }}-migrations-{{ randAlphaNum 8 | lower }}
+  labels:
+    {{- include "startupers.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook-delete-policy": hook-succeeded
+    # "helm.sh/hook": post-install,pre-upgrade
+spec:
+  template:
+    metadata:
+      name: {{ include "startupers.fullname" . }}-migrations
+      labels:
+        {{- include "startupers.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migrations
+    spec:
+      restartPolicy: OnFailure
+      imagePullSecrets:
+      {{- if (and (ne "" .Values.imageCredentials.username) (ne "" .Values.imageCredentials.password)) }}
+        - name: {{ include "startupers.fullname" . }}-registrykey
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "startupers.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      initContainers:
+        - name: wait-for-postgresql
+          image: {{ .Values.helpers.toolPsql.image.repository }}:{{ .Values.helpers.toolPsql.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            {{- toYaml .Values.helpers.toolPsql.resources | nindent 12 }}
+          env:
+            - name: POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "startupers.configSecretName" . }}
+                  key: database-url
+      containers:
+        - name: {{ include "startupers.fullname" . }}-db-migrations-job
+          image: {{ .Values.helpers.migrations.image.repository }}:{{ .Values.helpers.migrations.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            {{- toYaml .Values.helpers.migrations.resources | nindent 12 }}
+          env:
+            - name: POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "startupers.configSecretName" . }}
+                  key: database-url
+{{- end }}

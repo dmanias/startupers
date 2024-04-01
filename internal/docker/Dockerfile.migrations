@@ -1,0 +1,24 @@
+FROM debian:bookworm-slim@sha256:741bae561f5c2261f4cdd535e4fd4c248dec0aafc1b9a1410b3d67ad24571340
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set the URL and file name for the deb package
+ARG DEB_PACKAGE_FILE=migrate.deb
+ARG DEB_PACKAGE_URL=https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-amd64.deb
+ARG DEB_PACKAGE_SHA="8222b34f31fa1140f00917916a174bf6580efdca"
+
+# Install dependencies needed for downloading and installing the deb package
+RUN apt-get update && apt-get install --no-install-recommends -y curl=7.88.1-10+deb12u5 ca-certificates=20230311 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    curl -L -o $DEB_PACKAGE_FILE -C - $DEB_PACKAGE_URL && \
+    echo "$DEB_PACKAGE_SHA migrate.deb" > migrate.deb.txt && \
+    sha1sum --check migrate.deb.txt && \
+    dpkg -i $DEB_PACKAGE_FILE  && \
+    rm $DEB_PACKAGE_FILE && apt-get clean
+
+USER nobody
+
+# Copy the migration directory to the container
+COPY --chown=nobody:nogroup migrations /migrations
+COPY docker/migrations/entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]

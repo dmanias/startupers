@@ -1,0 +1,31 @@
+{{- if .Values.networkPolicy.enabled -}}
+---
+apiVersion: {{ include "common.capabilities.networkPolicy.apiVersion" . }}
+kind: NetworkPolicy
+metadata:
+  name: {{ include "startupers.fullname" . }}-ingress
+  labels:
+    {{- include "startupers.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+    {{- include "startupers.selectorLabels" . | nindent 6 }}
+  ingress:
+    {{- if and .Values.metrics.enabled .Values.networkPolicy.metrics.enabled }}
+    - from:
+      - {{ .Values.networkPolicy.metrics.selector | toYaml | nindent 8 | trim }}
+      ports:
+      - port: 27506
+    {{- end }}
+    {{- if .Values.networkPolicy.ingressRules.enabled }}
+    - from:
+      - {{ .Values.networkPolicy.ingressRules.selector | toYaml | nindent 8 | trim }}
+      ports:
+      - port: 27506
+    {{- end }}
+    {{- if .Values.networkPolicy.ingressRules.customRules }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.networkPolicy.ingressRules.customRules "context" $) | nindent 4 }}
+    {{- end }}
+  policyTypes:
+  - Ingress
+{{- end }}

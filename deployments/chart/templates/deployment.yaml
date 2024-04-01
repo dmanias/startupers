@@ -1,80 +1,145 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "creative-narration.fullname" . }}
+  name: {{ include "startupers.fullname" . }}
   labels:
-    {{- include "creative-narration.labels" . | nindent 4 }}
+    {{- include "startupers.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "creative-narration.selectorLabels" . | nindent 6 }}
+      {{- include "startupers.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+      {{- with .Values.commonAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "creative-narration.selectorLabels" . | nindent 8 }}
+        {{- include "startupers.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if or (and (ne "" .Values.imageCredentials.username) (ne "" .Values.imageCredentials.password)) (gt (len .Values.imagePullSecrets) 0) }}
       imagePullSecrets:
-        - name: {{ include "creative-narration.fullname" . }}-registrykey
+      {{- if (and (ne "" .Values.imageCredentials.username) (ne "" .Values.imageCredentials.password)) }}
+        - name: {{ include "startupers.fullname" . }}-registrykey
+      {{- end }}
       {{- with .Values.imagePullSecrets }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "creative-narration.serviceAccountName" . }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default "60" }}
+      serviceAccountName: {{ include "startupers.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: wait-for-postgresql
+          image: {{ .Values.helpers.toolPsql.image.repository }}:{{ .Values.helpers.toolPsql.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            {{- toYaml .Values.helpers.toolPsql.resources | nindent 12 }}
+          env:
+            - name: POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "startupers.configSecretName" . }}
+                  key: database-url
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+          - name: config-volume
+            mountPath: /app/config/config.yaml
+            subPath: config.yaml
+            readOnly: true
           env:
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
             - name: NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: POD_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CPU_REQUEST
+              valueFrom:
+                resourceFieldRef:
+                  resource: requests.cpu
             - name: CPU_LIMIT
               valueFrom:
                 resourceFieldRef:
                   resource: limits.cpu
-            - name: MEMORY_LIMIT
+            - name: MEM_REQUEST
+              valueFrom:
+                resourceFieldRef:
+                  resource: requests.memory
+            - name: MEM_LIMIT
               valueFrom:
                 resourceFieldRef:
                   resource: limits.memory
-            - name: "USERNAME"
-              value: {{ .Values.config.auth.username }}
+            - name: LOG_LEVEL
+              value: {{ .Values.settings.logLevel }}
+            - name: DEBUGGING
+              value: {{ .Values.settings.debug | toString | quote }}
           ports:
             - name: http
-              containerPort: 3000
+              containerPort: {{ .Values.settings.config.server.port | default "8082" }}
               protocol: TCP
+            {{- if .Values.settings.debug }}
             - name: debug
-              containerPort: 4000
+              containerPort: 2345
               protocol: TCP
-{{/*          livenessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /*/}}
-{{/*              port: http*/}}
-{{/*          readinessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /*/}}
-{{/*              port: http*/}}
+            {{- end }}
+          {{- if not .Values.settings.debug }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            timeoutSeconds: 1
+            periodSeconds: 3
+            successThreshold: 1
+            failureThreshold: 5
+          # readinessProbe:
+          #   httpGet:
+          #     path: /readiness
+          #     port: http
+          #   timeoutSeconds: 1
+          #   periodSeconds: 20
+          #   successThreshold: 1
+          #   failureThreshold: 3
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - name: config-volume
+        secret:
+          secretName: {{ include "startupers.configSecretName" . }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

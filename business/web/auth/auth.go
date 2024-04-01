@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/dmanias/startupers/business/core/user"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/open-policy-agent/opa/rego"
 	"go.uber.org/zap"
 )

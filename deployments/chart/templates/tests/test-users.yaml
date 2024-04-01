@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "startupers.fullname" . }}-test-user"
+  labels:
+    {{- include "startupers.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['http://{{ include "startupers.fullname" . }}:{{ .Values.service.port }}/users/1']
+  restartPolicy: Never

@@ -1,14 +1,8 @@
-# Default values for creative-narration.
+# Default values for startupers.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
-
-image:
-  repository: ghcr.io/dmanias/startupers
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
 
 imageCredentials:
   registry: ghcr.io
@@ -16,13 +10,31 @@ imageCredentials:
   password: ""
   email: ""
 
+image:
+  repository: ghcr.io/dmanias/startupers
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+helpers:
+  migrations:
+    enabled: true
+    image:
+      repository: ghcr.io/dmanias/startupers-migrations
+      pullPolicy: IfNotPresent
+      tag: ""
+    resources: {}
+  toolPsql:
+    enabled: true
+    image:
+      repository: ghcr.io/dmanias/startupers-postgres-wait
+      pullPolicy: IfNotPresent
+      tag: ""
+    resources: {}
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
-config:
-  auth:
-    username: "Manias"
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -33,18 +45,24 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+commonAnnotations:
+  reloader.stakater.com/auto: "true"
+
 podAnnotations: {}
 
 podSecurityContext: {}
   # fsGroup: 2000
 
 securityContext: {}
+  # allowPrivilegeEscalation: false
   # capabilities:
   #   drop:
   #   - ALL
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
+  # seccompProfile:
+  #   type: RuntimeDefault
 
 service:
   type: ClusterIP
@@ -66,17 +84,13 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources:
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-   limits:
-     cpu: 100m
-     memory: 512Mi
-   requests:
-     cpu: 100m
-     memory: 128Mi
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
 
 autoscaling:
   enabled: false
@@ -90,3 +104,67 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+metrics:
+  podMonitor:
+    enabled: false
+    namespace: ""
+    jobLabel: ""
+    interval: 30s
+    scrapeTimeout: ""
+    honorLabels: false
+    labels:
+      release: prometheus
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    jobLabel: ""
+    interval: 30s
+    scrapeTimeout: ""
+    honorLabels: false
+    labels:
+      release: prometheus
+  prometheusRule:
+    enabled: false
+    namespace: ""
+    additionalLabels:
+      release: prometheus
+    rules: []
+
+rbac:
+  create: false
+  rules: []
+
+networkPolicy:
+  enabled: false
+  metrics:
+    enabled: false
+    selector: {}
+  ingressRules:
+    enabled: false
+    selector: {}
+    customRules: []
+
+settings:
+  existingSecret: ""
+  logLevel: debug
+  debug: false
+  config:
+    logLevel: debug
+    server:
+      host: 127.0.0.1
+      port: 8082
+      timeout:
+        server: 30
+        read: 15
+        write: 10
+        idle: 5
+      postgres:
+        connector: postgresql://username:password@startupers-postgresql-primary:5432,startupers-postgresql-read:5432/startupers?sslmode=disable
+        maxConnections: 4
+        maxQueueTime: 1s
+        minConnections: 3
+        healthCheckPeriod: 10s
+        maxConnIdleTime: 5s
+        healthCheckTimeout: 5s
+        maxConnWaitTimeout: 5s
