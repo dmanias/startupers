@@ -1,0 +1,9 @@
+*.md
+!README.md
+LICENSE
+../skaffold.yaml
+.git
+.gitignore
+.dockerignore
+.argo
+.env
