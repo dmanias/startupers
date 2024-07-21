@@ -1,0 +1,17 @@
+FROM alpine:3.17.2
+
+ARG PUID=1000
+ARG PGID=1000
+
+RUN apk update && apk add --no-cache postgresql-client && \
+    addgroup -g "${PGID}" postgresql-client && \
+    adduser -u "${PUID}" -G postgresql-client -h /postgresql-client -D postgresql-client
+
+WORKDIR /postgresql-client
+COPY docker/postgres-wait/entrypoint.sh .
+
+USER postgresql-client
+
+ENTRYPOINT ["/postgresql-client/entrypoint.sh"]
+# CMD [ "-e", "POSTGRES_HOST", "-e", "POSTGRES_PORT", "-e", "POSTGRES_DB", "-e", "POSTGRES_USER", "-e", "POSTGRES_PASSWORD"]
+# CMD [ "-e", "POSTGRES_URL"]

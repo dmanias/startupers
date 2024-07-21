@@ -1,0 +1,113 @@
+# This skaffold is used to deploy components of the backend in a shared context, meaning each component will use the staging environment for all external services.
+# All ingresses are disabled for these deployments to avoid rate limiting. Users can access their deployments though a port-foreword that's automatically created once deployed.
+# Examples:
+# skaffold dev
+# skaffold dev --profile=debug
+---
+apiVersion: skaffold/v4beta5
+kind: Config
+metadata:
+  name: startupers
+build:
+  local:
+    push: true
+  tagPolicy:
+    gitCommit: {}
+  artifacts:
+    - &build-playground
+      image: ghcr.io/dmanias/startupers
+      context: .
+      docker:
+        target: &default_target development
+        dockerfile: Dockerfile
+    - &build-migrations
+      image: ghcr.io/dmanias/startupers-migrations
+      context: internal
+      docker:
+        dockerfile: docker/Dockerfile.migrations
+    - &build-postgres-wait
+      image: ghcr.io/dmanias/startupers-postgres-wait
+      context: internal
+      docker:
+        dockerfile: docker/Dockerfile.postgres-wait
+deploy:
+  kubeContext: kind-kind
+  helm:
+    releases:
+      - &deployment
+        name: startupers
+        namespace: "{{.USERNAME}}"
+        createNamespace: true
+        chartPath: deployments/chart
+        skipBuildDependencies: true
+        wait: true
+        valuesFiles:
+          - deployments/chart/misc/dev/postgresql-values.yaml
+          - deployments/chart/misc/dev/mongo-values.yaml
+          - deployments/chart/misc/dev/vault-values.yaml
+        setValueTemplates:
+          image:
+            tag: "{{.IMAGE_TAG}}"
+          helpers:
+            migrations:
+              image:
+                tag: "{{.IMAGE_TAG}}"
+            toolPsql:
+              image:
+                tag: "{{.IMAGE_TAG}}"
+verify:
+- name: alpine-wget
+  container:
+    name: alpine-wget
+    image: alpine:3.15.4
+    command: ["/bin/sh"]
+    args: ["-c", "wget http://www.google.com"]
+portForward:
+  - &port
+    resourceType: service
+    namespace: "{{.USERNAME}}"
+    resourceName: startupers
+    port: 80
+    localPort: 9000
+  - &vault-ui
+    resourceType: service
+    namespace: "{{.USERNAME}}"
+    resourceName: startupers-vault
+    port: 8200
+    localPort: 8200
+  - &port-db
+    resourceType: service
+    namespace: "{{.USERNAME}}"
+    resourceName: startupers-postgresql-primary
+    port: 5432
+    localPort: 5432
+profiles:
+  - name: default
+    activation: [{}]
+  - name: debug
+    build:
+      artifacts:
+        - <<: *build-playground
+          docker:
+            target: debug
+            #dockerfile: internal/docker/Dockerfile
+            dockerfile: Dockerfile
+        - <<: *build-migrations
+        - <<: *build-postgres-wait
+    deploy:
+      kubeContext: kind-kind
+      helm:
+        releases:
+          - <<: *deployment
+            setValueTemplates:
+              settings:
+                debug: true
+    portForward:
+      - <<: *port
+      - <<: *vault-ui
+      - <<: *port-db
+      - resourceType: deployment
+        namespace: "{{.USERNAME}}"
+        resourceName: startupers
+        port: 2345
+        localPort: 2345

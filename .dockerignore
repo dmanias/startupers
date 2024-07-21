@@ -1,0 +1,23 @@
+*.md
+!README.md
+LICENSE
+.git
+.gitignore
+.dockerignore
+.argo
+.github
+.pre-commit-config.yaml
+internal/
+scripts/
+deployments/
+vendor/
+skaffold.yaml-new
+.env
+Makefile
+qodana.yaml
+
+# Ignore common directories
+.idea/
+.vscode/
+
+questions

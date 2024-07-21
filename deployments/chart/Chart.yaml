@@ -1,0 +1,30 @@
+apiVersion: v2
+name: startupers
+description: A Helm chart for Kubernetes
+type: application
+keywords:
+  - A list of keywords about this project (optional)
+version: 0.1.0
+sources:
+  - https://github.com/dmanias/startupers
+appVersion: "1.16.0"
+
+dependencies:
+  - name: vault
+    repository: https://helm.releases.hashicorp.com
+    version: 0.27.0
+    condition: vault.global.enabled
+  - name: postgresql
+    repository: https://charts.bitnami.com/bitnami
+    version: 12.12.10
+    condition: postgresql.enabled
+  - name: mongodb
+    repository: https://charts.bitnami.com/bitnami
+    version: 14.12.3
+    condition: mongodb.enabled
+
+
+maintainers: # (optional)
+  - name: Dimosthenis Manias
+    email: dimosthenis.manias@gmail.com
+    url: https://github.com/dmanias
