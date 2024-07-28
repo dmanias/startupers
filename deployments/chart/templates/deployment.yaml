@@ -87,6 +87,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "startupers.configSecretName" . }}
                   key: database-name
+            - name: POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "startupers.configSecretName" . }}
+                  key: database-url
             - name: AUTH_ACTIVEKID
               valueFrom:
                 secretKeyRef:
@@ -146,19 +151,19 @@ spec:
             httpGet:
               path: /liveness
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: 300
             timeoutSeconds: 1
             periodSeconds: 3
             successThreshold: 1
             failureThreshold: 5
-          # readinessProbe:
-          #   httpGet:
-          #     path: /readiness
-          #     port: http
-          #   timeoutSeconds: 1
-          #   periodSeconds: 20
-          #   successThreshold: 1
-          #   failureThreshold: 3
+          readinessProbe:
+{{/*            httpGet:*/}}
+{{/*              path: /readiness*/}}
+{{/*              port: http*/}}
+{{/*            timeoutSeconds: 1*/}}
+{{/*            periodSeconds: 20*/}}
+{{/*            successThreshold: 1*/}}
+{{/*            failureThreshold: 3*/}}
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

@@ -10,12 +10,12 @@ postgresql:
     pullPolicy: Always
   auth:
     enablePostgresUser: true
-    postgresPassword: postgres
+    postgresPassword: lele3482!!!
     username: username
-    password: password
+    password: lele3482!!!
     database: startupers
     replicationUsername: repl_user
-    replicationPassword: postgrespostgres
+    replicationPassword: lele3482!!!
     existingSecret: ""
     secretKeys:
       adminPasswordKey: postgres-password

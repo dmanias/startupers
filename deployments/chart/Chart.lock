@@ -5,8 +5,5 @@ dependencies:
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 12.12.10
-- name: mongodb
-  repository: https://charts.bitnami.com/bitnami
-  version: 14.12.3
-digest: sha256:a682ab7d20fe60c81f3475e0e053e491edc04ea5d8e9e6a5b9498469bfdb4a83
-generated: "2024-03-06T17:40:46.178880251+02:00"
+digest: sha256:a3b3f63df18326c60baa71923df1b1d736228ec89ecba92b023ef5bf2297216f
+generated: "2024-07-23T09:04:52.133647882+03:00"

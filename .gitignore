@@ -25,4 +25,6 @@ go.work
 .idea
 questions
 deployments/chart/values.yaml
+deployments/chart/misc/dev
+deployments/chart/misc/dev/postgresql-values.yaml
 zarf

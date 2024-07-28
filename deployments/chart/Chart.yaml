@@ -10,18 +10,18 @@ sources:
 appVersion: "1.16.0"
 
 dependencies:
-  - name: vault
-    repository: https://helm.releases.hashicorp.com
-    version: 0.27.0
-    condition: vault.global.enabled
+#  - name: vault
+#    repository: https://helm.releases.hashicorp.com
+#    version: 0.27.0
+#    condition: vault.global.enabled
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
     version: 12.12.10
     condition: postgresql.enabled
-  - name: mongodb
-    repository: https://charts.bitnami.com/bitnami
-    version: 14.12.3
-    condition: mongodb.enabled
+#  - name: mongodb
+#    repository: https://charts.bitnami.com/bitnami
+#    version: 14.12.3
+#    condition: mongodb.enabled
 
 
 maintainers: # (optional)

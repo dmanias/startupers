@@ -31,7 +31,7 @@ build:
       docker:
         dockerfile: docker/Dockerfile.postgres-wait
 deploy:
-  kubeContext: kind-kind
+  kubeContext: gke_arctic-conduit-428009-p0_europe-west3-c_startupers-cluster
   helm:
     releases:
       - &deployment
@@ -95,7 +95,7 @@ profiles:
         - <<: *build-migrations
         - <<: *build-postgres-wait
     deploy:
-      kubeContext: kind-kind
+      kubeContext: gke_arctic-conduit-428009-p0_europe-west3-c_startupers-cluster
       helm:
         releases:
           - <<: *deployment

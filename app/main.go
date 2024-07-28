@@ -75,14 +75,14 @@ func run(log *zap.SugaredLogger) error {
 	cfg := struct {
 		conf.Version
 		Web struct {
-			APIHost         string        `conf:"default:0.0.0.0:3000"`
-			DebugHost       string        `conf:"default:0.0.0.0:4000"`
-			ReadTimeout     time.Duration `conf:"default:90s"`
-			WriteTimeout    time.Duration `conf:"default:60s"`
-			IdleTimeout     time.Duration `conf:"default:150s"`
-			ShutdownTimeout time.Duration `conf:"default:60s"`
-			//	CORSAllowedOrigins []string      `conf:"default:*"`
-			CORSAllowedOrigins []string `conf:"default:http://localhost:3000"`
+			APIHost            string        `conf:"default:0.0.0.0:3000"`
+			DebugHost          string        `conf:"default:0.0.0.0:4000"`
+			ReadTimeout        time.Duration `conf:"default:90s"`
+			WriteTimeout       time.Duration `conf:"default:60s"`
+			IdleTimeout        time.Duration `conf:"default:150s"`
+			ShutdownTimeout    time.Duration `conf:"default:60s"`
+			CORSAllowedOrigins []string      `conf:"default:*"`
+			//CORSAllowedOrigins []string `conf:"default:http://localhost:3000"`
 		}
 		AI struct {
 			APIKey string `conf:"env:AI_API_KEY"`
